@@ -2,6 +2,7 @@ import google.generativeai as genai
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.schema import HumanMessage, SystemMessage
 from app.config import get_settings
+from app.prompts.system_prompts import prompt_manager
 
 
 class ChatbotService:
@@ -12,14 +13,16 @@ class ChatbotService:
         self.llm = ChatGoogleGenerativeAI(
             model=self.settings.model_name,
             google_api_key=self.settings.google_api_key,
-            temperature=0.7,
+            temperature=0.2,
             convert_system_message_to_human=True
         )
         
-        self.system_prompt = """You are an expert assistant specializing in exoplanets 
-        and astronomical models. Provide clear, accurate, and educational responses 
-        about exoplanets, their detection methods, characteristics, and related 
-        scientific concepts."""
+        # Load system prompt from file
+        try:
+            self.system_prompt = prompt_manager.load_prompt(self.settings.active_prompt)
+        except FileNotFoundError:
+            # Fallback to default prompt if file not found
+            self.system_prompt = prompt_manager.load_prompt("exoplanet_expert")
     
     async def get_response(self, user_message: str) -> str:
         try:
@@ -33,6 +36,13 @@ class ChatbotService:
         
         except Exception as e:
             raise Exception(f"Error generating response: {str(e)}")
+    
+    def reload_prompt(self):
+        """Reload the system prompt (useful for development)."""
+        try:
+            self.system_prompt = prompt_manager.reload_prompt(self.settings.active_prompt)
+        except FileNotFoundError:
+            self.system_prompt = prompt_manager.load_prompt("exoplanet_expert")
 
 
 chatbot_service = ChatbotService()
