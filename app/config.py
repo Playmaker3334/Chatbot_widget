@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     model_name: str = "models/gemini-2.5-flash"
     app_name: str = "Exoplanet Chatbot"
     debug: bool = False
+    active_prompt: str = "exoplanet_expert"
     
     class Config:
         env_file = ".env"
